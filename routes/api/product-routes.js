@@ -7,7 +7,39 @@ const { Product, Category, Tag, ProductTag } = require('../../models');
 router.get('/', (req, res) => {
   // find all products
   // be sure to include its associated Category and Tag data
-  Product.findAll().then((productData) => {
+  Product.findAll({
+    include: [Category, {
+      model: Tag,
+      attributes: ["tag_name"]
+    }]
+  })
+  .then((productData) => {
+  // {
+  //   id: 1,
+  //   product_name: "Basketball",
+  //   price: 200.00,
+  //   stock: 3,
+  //   category: {
+        // id: 1,
+        // category_name: "Ball"
+  //    },
+  //  tags: [
+  //         {
+  //           id: 1,
+  //           tag_name: "blue"
+  //         },
+  //         {
+  //           id: 3,
+  //           tag_name: "red"
+  //         }
+  // ]
+  // },
+  // {
+  //   id: 2,
+  //   product_name: "Soccer ball",
+  //   price: 200.00,
+  //   stock: 3
+  // }
     res.json(productData);
   });
 });
@@ -16,11 +48,11 @@ router.get('/', (req, res) => {
 router.get('/:id', (req, res) => {
   // find a single product by its `id`
   // be sure to include its associated Category and Tag data
-  product.findOne(
+  Product.findOne(
     {
-      include: [{model: Category}, {model: Tag, through: ProductTag, as: ''}], //as?
+      include: [{model: Category}, {model: Tag, through: ProductTag}],
       where: {
-        id: res.params.id
+        id: req.params.id
       },
     }
   ).then((productData) => {
@@ -35,10 +67,16 @@ router.post('/', (req, res) => {
       product_name: "Basketball",
       price: 200.00,
       stock: 3,
-      tagIds: [1, 2, 3, 4]
+      tagIds: [1, 3]
     }
   */
   Product.create(req.body)
+  // {
+  //   id: 5,
+  //   product_name: "Basketball",
+  //   price: 200.00,
+  //   stock: 3
+  // }
     .then((product) => {
       // if there's product tags, we need to create pairings to bulk create in the ProductTag model
       if (req.body.tagIds.length) {
@@ -47,6 +85,14 @@ router.post('/', (req, res) => {
             product_id: product.id,
             tag_id,
           };
+          // {
+          //   product_id: 3,
+          //   tag_id: 1
+          // },
+          // {
+          //   product_id: 3,
+          //   tag_id: 3
+          // }
         });
         return ProductTag.bulkCreate(productTagIdArr);
       }
